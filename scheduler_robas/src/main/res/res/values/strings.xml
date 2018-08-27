@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Scheduler</string>
+    <string name="action_settings">Settings</string>
+    <string name="app_description">Scheduler for EMA and EMI</string>
+    <string name="url_release">https://github.com/MD2Korg/mCerebrum-EMAScheduler/releases</string>
+    <string name="url_sourcecode">https://github.com/MD2Korg/mCerebrum-EMAScheduler</string>
+    <string name="button_close">Close</string>
+</resources>
