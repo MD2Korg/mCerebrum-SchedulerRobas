@@ -26,31 +26,25 @@ package org.md2k.schedulerrobas.configuration2object;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import android.content.Context;
-
-import org.md2k.schedulerrobas.State;
 import org.md2k.schedulerrobas.condition.ConditionManager;
 import org.md2k.schedulerrobas.configuration.Configuration;
-import org.md2k.schedulerrobas.datakit.DataKitManager;
 import org.md2k.schedulerrobas.exception.ConfigurationFileFormatError;
 import org.md2k.schedulerrobas.listen.Callback;
 import org.md2k.schedulerrobas.operation.AbstractOperation;
 import org.md2k.schedulerrobas.operation.application.ApplicationOperation;
 import org.md2k.schedulerrobas.time.Time;
 
-import rx.Observable;
-
 class Config2Application {
-    public static AbstractOperation getObject(String _type, String _id, DataKitManager dataKitManager, Configuration.CApplicationList[] cApplicationList, ConditionManager conditionManager, String id, Callback callback) throws ConfigurationFileFormatError {
+    public static AbstractOperation getObject(String _type, String _id, Configuration.CApplicationList[] cApplicationList, String id, Callback callback) throws ConfigurationFileFormatError {
         Configuration.CApplication[] cApplications=get(cApplicationList, id);
         if(cApplications==null) return null;
-        Configuration.CApplication cApplication = get(cApplications, conditionManager);
+        Configuration.CApplication cApplication = get(cApplications);
         if(cApplication==null) return null;
         return new ApplicationOperation(_type, _id, cApplication.getPackage_name(), Time.getTime(cApplication.getTimeout()), cApplication.getParameter(),callback);
     }
-    private static Configuration.CApplication get(Configuration.CApplication[] cApplications, ConditionManager conditionManager){
+    private static Configuration.CApplication get(Configuration.CApplication[] cApplications){
         for (Configuration.CApplication cApplication : cApplications) {
-            if(conditionManager.isTrue(cApplication.getCondition()))
+            if(ConditionManager.getInstance().isTrue(cApplication.getCondition()))
                 return cApplication;
         }
         return null;

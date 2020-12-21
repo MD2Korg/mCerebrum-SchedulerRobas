@@ -46,38 +46,38 @@ import java.util.List;
 import java.util.Locale;
 
 public class get_last_sample extends Function {
-    public get_last_sample(DataKitManager dataKitManager) {
-        super("get_last_sample",dataKitManager);
+    public get_last_sample() {
+        super("get_last_sample");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, -1) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
+                details.add(name);
                 String s=name+"(";
                 for(int i=0;i<lazyParams.size();i++) {
                     if(i!=0) s+=",";
                     s += lazyParams.get(i).getString();
                 }
-                s+=")=";
+                details.add(s+")");
 
                 DataSourceBuilder db = createDataSource(lazyParams,1);
-                ArrayList<DataSourceClient> dd = dataKitManager.find(db.build());
+                ArrayList<DataSourceClient> dd = DataKitManager.getInstance().find(db.build());
                 if(dd.size()==0){
-                    s+=String.valueOf(Long.MIN_VALUE)+" [datasource not found]";
-                    d.add(s);return create(Long.MIN_VALUE);
+                    details.add(String.valueOf(Long.MIN_VALUE)+" [datasource not found]");
+                    return create(Long.MIN_VALUE);
                 }else {
                     for (int i = 0; i < dd.size(); i++) {
-                        ArrayList<DataType> dataTypes = dataKitManager.query(dd.get(i), 1);
+                        ArrayList<DataType> dataTypes = DataKitManager.getInstance().query(dd.get(i), 1);
                         if (dataTypes.size() == 0) continue;
                         double curValue = getValue(dataTypes.get(0), lazyParams.get(0).eval().intValue());
-                        s+=String.format(Locale.getDefault(), "%.2f",curValue);
-                        d.add(s);
+                        details.add(String.format(Locale.getDefault(), "%.2f",curValue));
                         return create(curValue);
                     }
                 }
-                s+=String.valueOf(Long.MIN_VALUE)+" [data not found]";
-                d.add(s);return create(Long.MIN_VALUE);
+                details.add(String.valueOf(Long.MIN_VALUE)+" [data not found]");
+                return create(Long.MIN_VALUE);
             }
         });
         return e;

@@ -32,6 +32,7 @@ import android.util.Log;
 import com.orhanobut.logger.Logger;
 
 import org.md2k.datakitapi.time.DateTime;
+import org.md2k.schedulerrobas.datakit.DataKitManager;
 import org.md2k.schedulerrobas.logger.MyLogger;
 import org.md2k.schedulerrobas.time.Time;
 
@@ -88,7 +89,7 @@ public class Listen {
             while(t<curTime) t+=DAYS_IN_MILLIS;
             if(res==-1 || res>t) res = t;
         }
-        Logger.d("Next Trigger Time = "+DateTime.convertTimeStampToDateTime(res));
+        DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/listen/next_trigger",DateTime.convertTimeStampToDateTime(res));
         logger.write("listen","Next Trigger Time = "+DateTime.convertTimeStampToDateTime(res));
         return res-DateTime.getDateTime();
     }

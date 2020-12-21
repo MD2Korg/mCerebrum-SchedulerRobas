@@ -26,12 +26,8 @@ package org.md2k.schedulerrobas.condition.function;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import android.util.Log;
-
 import com.udojava.evalex.AbstractFunction;
 import com.udojava.evalex.Expression;
-
-import org.md2k.schedulerrobas.datakit.DataKitManager;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -39,8 +35,8 @@ import java.util.List;
 import java.util.Random;
 
 public class random extends Function {
-    public random(DataKitManager dataKitManager) {
-        super("random",dataKitManager);
+    public random() {
+        super("random");
     }
 
     @Override
@@ -48,7 +44,7 @@ public class random extends Function {
         return s;
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addFunction(new AbstractFunction("random", 1) {
             @Override
             public BigDecimal eval(List<BigDecimal> parameters) {
@@ -58,8 +54,9 @@ public class random extends Function {
                 int v = (int) (parameters.get(0).longValue()/1000);
                 Random r = new Random();
                 long value = r.nextInt(v)*1000;
-                d.add(name+"("+parameters.get(0).longValue()+")="+ value);
-                Log.d("abc","random("+parameters.get(0).longValue()+")="+value);
+                details.add(name);
+                details.add(name+"("+String.valueOf(parameters.get(0).longValue())+")");
+                details.add(String.valueOf(value));
                 return new BigDecimal(value);
             }
         });

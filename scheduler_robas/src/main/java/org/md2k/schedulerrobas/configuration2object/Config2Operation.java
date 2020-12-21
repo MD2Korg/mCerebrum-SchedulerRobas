@@ -43,14 +43,14 @@ import java.util.ArrayList;
 import rx.Observable;
 
 public class Config2Operation {
-    public static ArrayList<AbstractOperation> getOperation(Context context, String _type, String _id, MyLogger logger, DataKitManager dataKitManager, Configuration configuration, ConditionManager conditionManager, String id, Callback callback) throws ConfigurationFileFormatError {
+    public static ArrayList<AbstractOperation> getOperation(String _type, String _id, MyLogger logger, Configuration configuration, String id, Callback callback) throws ConfigurationFileFormatError {
         ArrayList<AbstractOperation> abstractOperations=new ArrayList<>();
-        AbstractOperation o = Config2Application.getObject(_type, _id, dataKitManager, configuration.getApplication_list(), conditionManager, id, callback);
+        AbstractOperation o = Config2Application.getObject(_type, _id, configuration.getApplication_list(), id, callback);
         if(o!=null){
             abstractOperations.add(o);
             return abstractOperations;
         }
-            abstractOperations = Config2Notification.getObject(context,_type,_id, logger, dataKitManager, configuration.getNotification_list(), configuration.getNotification_details(), conditionManager, id, callback);
+            abstractOperations = Config2Notification.getObject(_type,_id, logger, configuration.getNotification_list(), configuration.getNotification_details(), id, callback);
         return abstractOperations;
     }
 

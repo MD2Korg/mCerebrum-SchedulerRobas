@@ -41,25 +41,27 @@ import java.util.List;
 import java.util.Locale;
 
 public class get_phone_battery extends Function {
-    public get_phone_battery(DataKitManager dataKitManager) {
-        super("get_phone_battery",dataKitManager);
+    public get_phone_battery() {
+        super("get_phone_battery");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, 0) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
                 double res = getBattery();
-                String st = name+"()=";
+                details.add(name);
+                details.add(name+"()");
                 if(res==200){
-                    st+="100 [datasource not found]";
+                    details.add("100 [datasource not found]");
                     res=100;
                 }else if(res==300){
-                    st+="100 [data not found]";
+                    details.add("100 [data not found]");
                     res=100;
                 }
-                else st+=String.format(Locale.getDefault(), "%.2f",res);
-                d.add(st);
+                else {
+                    details.add(String.format(Locale.getDefault(), "%.2f", res));
+                }
                 return create(res);
             }
         });
@@ -68,9 +70,9 @@ public class get_phone_battery extends Function {
     private double getBattery(){
         ApplicationBuilder a = new ApplicationBuilder().setId("org.md2k.phonesensor");
         DataSourceBuilder d = new DataSourceBuilder().setType(DataSourceType.BATTERY).setApplication(a.build());
-        ArrayList<DataSourceClient> dsc = dataKitManager.find(d.build());
+        ArrayList<DataSourceClient> dsc = DataKitManager.getInstance().find(d.build());
         if(dsc.size()==0) return 200;
-        ArrayList<DataType> dt = dataKitManager.query(dsc.get(0), 1);
+        ArrayList<DataType> dt = DataKitManager.getInstance().query(dsc.get(0), 1);
         if(dt.size()==0) return 300;
         return ((DataTypeDoubleArray) dt.get(0)).getSample()[0];
     }

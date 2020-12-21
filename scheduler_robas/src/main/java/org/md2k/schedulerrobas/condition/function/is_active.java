@@ -40,17 +40,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class is_active extends Function {
-    public is_active(DataKitManager dataKitManager) {
-        super("is_active", dataKitManager);
+    public is_active() {
+        super("is_active");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, 2) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
                 long sTime = lazyParams.get(0).eval().longValue();
                 long eTime = lazyParams.get(1).eval().longValue();
-                boolean isActive = isActive(sTime, eTime,d);
+                boolean isActive = isActive(sTime, eTime, details);
                 if (isActive) return create(1);
                 else return create(0);
             }
@@ -58,17 +58,19 @@ public class is_active extends Function {
         return e;
     }
 
-    private boolean isActive(long prevTime, long curTime, ArrayList<String> d) {
+    private boolean isActive(long prevTime, long curTime, ArrayList<String> details) {
         DataSourceBuilder dataSourceBuilder = new DataSourceBuilder().setType(DataSourceType.STRESS_ACTIVITY);
         String ss = DateTime.convertTimeStampToDateTime(prevTime)+", "+DateTime.convertTimeStampToDateTime(curTime);
-        ArrayList<DataSourceClient> dataSourceClientArrayList = dataKitManager.find(dataSourceBuilder.build());
+        ArrayList<DataSourceClient> dataSourceClientArrayList = DataKitManager.getInstance().find(dataSourceBuilder.build());
+        details.add(name);
+        details.add(name+"("+ss+")");
         if (dataSourceClientArrayList.size() == 0) {
-            d.add(name + "("+ss+")=0 [datasource not found]");
+            details.add("0 [datasource not found]");
             return false;
         }
-        ArrayList<DataType> dataTypes = dataKitManager.query(dataSourceClientArrayList.get(0), prevTime, curTime);
+        ArrayList<DataType> dataTypes = DataKitManager.getInstance().query(dataSourceClientArrayList.get(0), prevTime, curTime);
         if (dataTypes.size() == 0) {
-            d.add(name + "("+ss+")=0 [data not found]");
+            details.add("0 [data not found]");
             return false;
         }
         double samples = 0;
@@ -77,10 +79,10 @@ public class is_active extends Function {
             if ((int) sample == 0) samples++;
         }
         if (samples / dataTypes.size() >= 0.66) {
-            d.add(name + "("+ss+")=0 [person not active]");
+            details.add("0 [not active]");
             return false;
         } else {
-            d.add(name + "("+ss+")=1 [person active]");
+            details.add("1 [active]");
             return true;
         }
     }

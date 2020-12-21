@@ -38,36 +38,35 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class get_sample_no extends Function {
-    public get_sample_no(DataKitManager dataKitManager) {
-        super("get_sample_no", dataKitManager);
+    public get_sample_no() {
+        super("get_sample_no");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, -1) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
                 int count = 0;
-
+                details.add(name);
                 DataSourceBuilder db = createDataSource(lazyParams,2);
                 long sTime = lazyParams.get(0).eval().longValue();
                 long eTime = lazyParams.get(1).eval().longValue();
-                ArrayList<DataSourceClient> dd = dataKitManager.find(db.build());
+                ArrayList<DataSourceClient> dd = DataKitManager.getInstance().find(db.build());
                 String s=name+"("+ DateTime.convertTimeStampToDateTime(sTime)+","+DateTime.convertTimeStampToDateTime(eTime);
                 for(int i=2;i<lazyParams.size();i++) {
                     s += ","+lazyParams.get(i).getString();
                 }
-                s+=")=";
+                details.add(s+")");
 
                 if(dd.size()==0){
-                    s+="0 [datasource not found]";
-                    d.add(s);return create(0);
+                    details.add("0 [datasource not found]");
+                    return create(0);
                 }else {
                     for (int i = 0; i < dd.size(); i++) {
-                        ArrayList<DataType> dataTypes = dataKitManager.query(dd.get(i), sTime, eTime);
+                        ArrayList<DataType> dataTypes = DataKitManager.getInstance().query(dd.get(i), sTime, eTime);
                         count += dataTypes.size();
                     }
-                    s+=String.valueOf(count);
-                    d.add(s);
+                    details.add(String.valueOf(count));
                 }
                 return create(count);
             }

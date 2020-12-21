@@ -28,6 +28,7 @@ package org.md2k.schedulerrobas.scheduler;
 
 import com.orhanobut.logger.Logger;
 
+import org.md2k.schedulerrobas.datakit.DataKitManager;
 import org.md2k.schedulerrobas.logger.MyLogger;
 import org.md2k.schedulerrobas.what.WhatManager;
 import org.md2k.schedulerrobas.when.WhenManager;
@@ -36,7 +37,7 @@ public class Scheduler {
     private String type, id;
     private WhenManager whenManager;
     private WhatManager whatManager;
-    MyLogger logger;
+    private MyLogger logger;
 
     public Scheduler(String type, String id, WhenManager whenManager, WhatManager whatManager, MyLogger logger) {
         this.type = type;
@@ -54,7 +55,8 @@ public class Scheduler {
 
     public void start() {
         logger.write(type+"/"+id+"/scheduler", "start");
-        Logger.d(type+"/"+id+"/scheduler start");
+        DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/scheduler("+type+" "+id+")","start");
+
         if (whenManager.start())
             whatManager.start();
     }

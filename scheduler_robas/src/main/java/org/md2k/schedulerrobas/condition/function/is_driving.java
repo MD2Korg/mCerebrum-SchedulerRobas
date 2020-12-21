@@ -43,17 +43,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class is_driving extends Function {
-    public is_driving(DataKitManager dataKitManager) {
-        super("is_driving",dataKitManager);
+    public is_driving() {
+        super("is_driving");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, 2) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
                 long sTime = lazyParams.get(0).eval().longValue();
                 long eTime = lazyParams.get(1).eval().longValue();
-                boolean isDriving = isDriving(sTime, eTime, d);
+                boolean isDriving = isDriving(sTime, eTime, details);
                 if(isDriving) return create(1);
                 else return create(0);
             }
@@ -61,18 +61,20 @@ public class is_driving extends Function {
         return e;
     }
 
-    public boolean isDriving(long sTime, long eTime, ArrayList<String> d) {
+    public boolean isDriving(long sTime, long eTime, ArrayList<String> details) {
         String ss = DateTime.convertTimeStampToDateTime(sTime)+", "+DateTime.convertTimeStampToDateTime(eTime);
         ApplicationBuilder applicationBuilder = new ApplicationBuilder().setId("org.md2k.phonesensor");
         DataSourceBuilder dataSourceBuilder = new DataSourceBuilder().setType(DataSourceType.ACTIVITY_TYPE).setApplication(applicationBuilder.build());
-        ArrayList<DataSourceClient> dataSourceClientArrayList = dataKitManager.find(dataSourceBuilder.build());
+        ArrayList<DataSourceClient> dataSourceClientArrayList = DataKitManager.getInstance().find(dataSourceBuilder.build());
+        details.add(name);
+        details.add(name+"("+ss+")");
         if (dataSourceClientArrayList.size() == 0) {
-            d.add(name + "("+ss+")=0 [datasource not found]");
+            details.add("0 [datasource not found]");
             return false;
         }
-        ArrayList<DataType> dataTypes = dataKitManager.query(dataSourceClientArrayList.get(0), sTime, eTime);
+        ArrayList<DataType> dataTypes = DataKitManager.getInstance().query(dataSourceClientArrayList.get(0), sTime, eTime);
         if (dataTypes.size() == 0) {
-            d.add(name + "("+ss+")=0 [data not found]");
+            details.add("0 [data not found]");
             return false;
         }
         int count = 0;
@@ -82,10 +84,12 @@ public class is_driving extends Function {
                 count++;
             }
         }
-        d.add(name + "(" + ss + ")=0 [datapoint="+String.valueOf(dataTypes.size())+" driving="+String.valueOf(count)+" ratio="+String.format("%.2f",(double)(count)/dataTypes.size())+"]");
+        boolean result;
         if((double)(count)/dataTypes.size()<.01)
-            return false;
-        else return true;
+            result =  false;
+        else result = true;
+        details.add(String.valueOf(result)+" [datapoint="+String.valueOf(dataTypes.size())+" driving="+String.valueOf(count)+" ratio="+String.format("%.2f",(double)(count)/dataTypes.size())+"]");
+        return result;
     }
 
     public String prepare(String s) {

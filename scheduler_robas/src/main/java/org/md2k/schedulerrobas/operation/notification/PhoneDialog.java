@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
-import android.support.v4.content.LocalBroadcastManager;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.orhanobut.logger.Logger;
 
 import org.md2k.datakitapi.time.DateTime;
 import org.md2k.schedulerrobas.MyApplication;
+import org.md2k.schedulerrobas.datakit.DataKitManager;
 import org.md2k.schedulerrobas.listen.Callback;
 import org.md2k.schedulerrobas.logger.MyLogger;
 import org.md2k.schedulerrobas.operation.AbstractOperation;
@@ -70,7 +72,7 @@ public class PhoneDialog extends AbstractOperation {
         @Override
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra(ActivityDialog.RESULT);
-            Logger.d("Notification Dialog result = "+message);
+            DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/notification/dialog","result="+message);
             stop();
             callback.onReceive(message);
         }

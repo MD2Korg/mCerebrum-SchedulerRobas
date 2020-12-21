@@ -1,4 +1,15 @@
-package org.md2k.schedulerrobas.condition.function;
+package org.md2k.schedulerrobas.alarm_manager;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Handler;
+import android.util.Log;
+
+import org.md2k.schedulerrobas.MyApplication;
+import org.md2k.schedulerrobas.ServiceScheduler;
+
+
 /*
  * Copyright (c) 2016, The University of Memphis, MD2K Center
  * - Syed Monowar Hossain <monowar.hossain@gmail.com>
@@ -25,42 +36,21 @@ package org.md2k.schedulerrobas.condition.function;
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-import com.udojava.evalex.Expression;
-
-import org.md2k.schedulerrobas.time.Time;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-
-public class today extends Function {
-    public today() {
-        super("today");
-    }
-
-    public Expression add(Expression e, ArrayList<String> details) {
-        e.addLazyFunction(e.new LazyFunction(name, 0) {
-            @Override
-            public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
-                return new Expression.LazyNumber() {
-                    @Override
-                    public BigDecimal eval() {
-                        long res = Time.getToday();
-//                        d.add(name+"()="+ String.format(Locale.getDefault(), "%d",res)+" ["+ DateTime.convertTimeStampToDateTime(res)+"]");
-                        return new BigDecimal(res);
-                    }
-
-                    @Override
-                    public String getString() {
-                        return null;
-                    }
-                };
-            }
-        });
-        return e;
-    }
-    public String prepare(String s){
-        return s;
+public class MyBroadcastReceiver extends BroadcastReceiver {
+    private Handler h=null;
+    private Runnable runnable=new Runnable() {
+        @Override
+        public void run() {
+            Intent i = new Intent(MyApplication.getContext(), ServiceScheduler.class);
+            MyApplication.getContext().startService(i);
+        }
+    };
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Log.e("abc", "AlarmManager...onreceive");
+        Intent i = new Intent(context, ServiceScheduler.class);
+        context.stopService(i);
+        h = new Handler();
+        h.postDelayed(runnable, 5000);
     }
 }

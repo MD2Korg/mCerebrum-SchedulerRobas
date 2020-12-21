@@ -39,34 +39,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class get_study_week extends Function {
-    public get_study_week(DataKitManager dataKitManager) {
-        super("get_study_week", dataKitManager);
+    public get_study_week() {
+        super("get_study_week");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, 0) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
                 long v=Long.MIN_VALUE;
-                String s = name+"()";
+                details.add(name);
+                details.add(name+"()");
                 DataSourceBuilder ddd = new DataSourceBuilder().setType("STUDY").setId("START");
-                ArrayList<DataSourceClient> dd = dataKitManager.find(ddd.build());
+                ArrayList<DataSourceClient> dd = DataKitManager.getInstance().find(ddd.build());
                 if(dd.size()==0){
-                    s+=String.valueOf(Long.MIN_VALUE)+" [datasource not found]";
-                    d.add(s);return create(Long.MIN_VALUE);
+                    details.add(String.valueOf(Long.MIN_VALUE)+" [datasource not found]");
+                    return create(Long.MIN_VALUE);
                 }else {
                     for (int i = 0; i < dd.size(); i++) {
-                        ArrayList<DataType> dataTypes = dataKitManager.query(dd.get(i), 1);
+                        ArrayList<DataType> dataTypes = DataKitManager.getInstance().query(dd.get(i), 1);
                         if (dataTypes.size() == 0) continue;
                         long studyStartTime = ((DataTypeLong) (dataTypes.get(0))).getSample();
                         long curTime = DateTime.getDateTime();
                         v = (curTime - studyStartTime) / (1000 * 60 * 60 * 24 * 7) + 1;
-                        s+=String.valueOf(v);
-                        d.add(s);
+                        details.add(String.valueOf(v));
                         return create(v);
                     }
-                    s+=String.valueOf(Long.MIN_VALUE)+" [data not found]";
-                    d.add(s);
+                    details.add(String.valueOf(Long.MIN_VALUE)+" [data not found]");
                     return create(v);
                 }
             }

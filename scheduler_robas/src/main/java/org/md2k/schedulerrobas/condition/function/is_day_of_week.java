@@ -29,7 +29,6 @@ package org.md2k.schedulerrobas.condition.function;
 import com.udojava.evalex.Expression;
 
 import org.md2k.datakitapi.time.DateTime;
-import org.md2k.schedulerrobas.datakit.DataKitManager;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,11 +36,11 @@ import java.util.Calendar;
 import java.util.List;
 
 public class is_day_of_week extends Function {
-    public is_day_of_week(DataKitManager dataKitManager) {
-        super("is_day_of_week",dataKitManager);
+    public is_day_of_week() {
+        super("is_day_of_week");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, 1) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
@@ -49,13 +48,15 @@ public class is_day_of_week extends Function {
                     @Override
                     public BigDecimal eval() {
                         int res = 0;
+
                         Calendar c = Calendar.getInstance();
                         int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
                         String dd = lazyParams.get(0).getString();
                         if(dayOfWeek==getDayNumber(dd))
                             res=1;
-                        String s = name+"("+dd+")="+String.valueOf(res)+" [today:"+ DateTime.convertTimeStampToDateTime(c.getTimeInMillis(),"EEE, MMM d, yyyy");
-                        d.add(s);
+                        details.add(name);
+                        details.add(name+"("+dd+")");
+                        details.add(String.valueOf(res)+" [today:"+ DateTime.convertTimeStampToDateTime(c.getTimeInMillis(),"EEE, MMM d, yyyy"));
                         return new BigDecimal(res);
                     }
 

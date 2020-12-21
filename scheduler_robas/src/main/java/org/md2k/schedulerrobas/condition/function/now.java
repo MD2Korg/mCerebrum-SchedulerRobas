@@ -29,18 +29,17 @@ package org.md2k.schedulerrobas.condition.function;
 import com.udojava.evalex.Expression;
 
 import org.md2k.datakitapi.time.DateTime;
-import org.md2k.schedulerrobas.datakit.DataKitManager;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 public class now extends Function {
-    public now(DataKitManager dataKitManager) {
-        super("now",dataKitManager);
+    public now() {
+        super("now");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, 0) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {

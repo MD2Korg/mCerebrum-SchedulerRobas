@@ -32,21 +32,18 @@ import org.md2k.datakitapi.source.application.ApplicationBuilder;
 import org.md2k.datakitapi.source.datasource.DataSourceBuilder;
 import org.md2k.datakitapi.source.platform.PlatformBuilder;
 import org.md2k.datakitapi.source.platformapp.PlatformAppBuilder;
-import org.md2k.schedulerrobas.datakit.DataKitManager;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Function {
-    DataKitManager dataKitManager;
     String name;
-    Function(String name, DataKitManager dataKitManager){
+    Function(String name){
         this.name = name;
-        this.dataKitManager = dataKitManager;
     }
     public abstract String prepare(String s);
-    public abstract Expression add(Expression e, ArrayList<String> d);
+    public abstract Expression add(Expression e, ArrayList<String> details);
     Expression.LazyNumber create(final int v){
         return new Expression.LazyNumber() {
             @Override

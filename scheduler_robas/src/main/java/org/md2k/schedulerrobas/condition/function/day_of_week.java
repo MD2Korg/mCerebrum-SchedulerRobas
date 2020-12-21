@@ -28,19 +28,17 @@ package org.md2k.schedulerrobas.condition.function;
 
 import com.udojava.evalex.Expression;
 
-import org.md2k.schedulerrobas.datakit.DataKitManager;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 public class day_of_week extends Function {
-    public day_of_week(DataKitManager dataKitManager) {
-        super("day_of_week", dataKitManager);
+    public day_of_week() {
+        super("day_of_week");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, 0) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
@@ -48,7 +46,9 @@ public class day_of_week extends Function {
                     @Override
                     public BigDecimal eval() {
                         Calendar c = Calendar.getInstance();
-                        d.add("day_of_week()="+c.get(Calendar.DAY_OF_WEEK));
+                        details.add(name);
+                        details.add(name+"()");
+                        details.add(String.valueOf(c.get(Calendar.DAY_OF_WEEK)));
                         return new BigDecimal(c.get(Calendar.DAY_OF_WEEK));
                     }
 

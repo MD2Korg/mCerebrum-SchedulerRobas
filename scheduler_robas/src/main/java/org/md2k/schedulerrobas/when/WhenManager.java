@@ -30,6 +30,7 @@ import com.orhanobut.logger.Logger;
 
 import org.md2k.schedulerrobas.condition.ConditionManager;
 import org.md2k.schedulerrobas.configuration.Configuration;
+import org.md2k.schedulerrobas.datakit.DataKitManager;
 import org.md2k.schedulerrobas.logger.MyLogger;
 
 import java.util.ArrayList;
@@ -37,26 +38,24 @@ import java.util.ArrayList;
 public class WhenManager {
     private String type, id;
     private Configuration.CWhen[] cWhenList;
-    private ConditionManager conditionManager;
     //    private int[] tries;
     private MyLogger logger;
 
-    public WhenManager(String type, String id, Configuration.CWhen[] cWhenList, ConditionManager conditionManager, MyLogger logger) {
+    public WhenManager(String type, String id, Configuration.CWhen[] cWhenList, MyLogger logger) {
         this.type = type;
         this.id = id;
         this.cWhenList = cWhenList;
-        this.conditionManager = conditionManager;
         this.logger = logger;
     }
 
     public boolean start() {
         ArrayList<String> debug = new ArrayList<>();
-        boolean condition = conditionManager.isTrue(cWhenList[0].getCondition(), debug);
+        boolean condition = ConditionManager.getInstance().isTrue(cWhenList[0].getCondition(), debug);
         String s = "";
         for (int i = 0; i < debug.size(); i++)
             s += debug.get(i) + ";";
         logger.write(type + "/" + id + "/when[" + Integer.toString(0) + "]/condition[" + condition + "]", s);
-        Logger.d("WhenManager:" + type + "/" + id + "/when[" + 0 + "]/condition = " + condition + " details=" + s);
+        DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/when("+type+" "+id+")/condition",String.valueOf(condition)+" ["+s+"]");
         return condition;
     }
 

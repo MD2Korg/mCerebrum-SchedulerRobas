@@ -41,14 +41,15 @@ import java.util.List;
 import java.util.Locale;
 
 public class get_data_quality extends Function {
-    public get_data_quality(DataKitManager dataKitManager) {
-        super("get_data_quality",dataKitManager);
+    public get_data_quality() {
+        super("get_data_quality");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, -1) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
+                details.add(name);
                 //todo: check data quality code
                 double good =-1;
                 String s=name+"(";
@@ -60,23 +61,22 @@ public class get_data_quality extends Function {
                 s+= DateTime.convertTimeStampToDateTime(sTime)+", "+ DateTime.convertTimeStampToDateTime(eTime);
                 for(int i=2;i<lazyParams.size();i++)
                     s+=","+lazyParams.get(i).getString();
-                s+=")=";
-                ArrayList<DataSourceClient> dd = dataKitManager.find(db.build());
+                details.add(s+")");
+                ArrayList<DataSourceClient> dd = DataKitManager.getInstance().find(db.build());
                 if(dd.size()==0){
-                    s+="0 [datasource not found]";
+                    details.add("0 [datasource not found]");
                 }else {
                     String st="";
                     for (int i = 0; i < dd.size(); i++) {
-                        ArrayList<DataType> dataTypes = dataKitManager.query(dd.get(i), sTime, eTime);
+                        ArrayList<DataType> dataTypes = DataKitManager.getInstance().query(dd.get(i), sTime, eTime);
                         double g = getDataQuality(dataTypes, sTime, eTime);
                         if (g > good) {
                             st=getDataQualityString(dataTypes, sTime, eTime);
                             good = g;
                         }
                     }
-                    s+=st+"]";
+                    details.add(st);
                 }
-                d.add(s);
                 return create(good);
             }
         });
@@ -90,7 +90,7 @@ public class get_data_quality extends Function {
             if(res[DATA_QUALITY.GOOD]>30) goodMinute++;
         }
         double good = ((goodMinute*100.0)/minute);
-        String st=String.format(Locale.getDefault(), "%.2f",good)+"[total minute="+String.valueOf(minute)+" sample="+String.valueOf(dataTypes.size()+" good="+String.valueOf(goodMinute));
+        String st=String.format(Locale.getDefault(), "%.2f",good)+"[total minute="+String.valueOf(minute)+" sample="+String.valueOf(dataTypes.size()+" good="+String.valueOf(goodMinute)+"]");
         return st;
     }
     private double getDataQuality(ArrayList<DataType> dataTypes, long sTime, long eTime){

@@ -54,31 +54,36 @@ import java.util.Locale;
 
 public class ConditionManager {
     private ArrayList<Function> functions;
+    private static ConditionManager instance;
+    public static ConditionManager getInstance() {
+        if(instance==null) instance = new ConditionManager();
+        return instance;
+    }
 
-    public ConditionManager(DataKitManager dataKitManager) {
+    private ConditionManager() {
         functions = new ArrayList<>();
 
-        functions.add(new day_of_week(dataKitManager));
+        functions.add(new day_of_week());
 
-        functions.add(new get_data_quality(dataKitManager));
-        functions.add(new get_last_sample(dataKitManager));
-        functions.add(new get_last_sample_time(dataKitManager));
-        functions.add(new get_2nd_last_sample_time(dataKitManager));
-        functions.add(new get_phone_battery(dataKitManager));
-        functions.add(new get_sample_no(dataKitManager));
+        functions.add(new get_data_quality());
+        functions.add(new get_last_sample());
+        functions.add(new get_last_sample_time());
+        functions.add(new get_2nd_last_sample_time());
+        functions.add(new get_phone_battery());
+        functions.add(new get_sample_no());
 
-        functions.add(new get_study_week(dataKitManager));
-        functions.add(new is_active(dataKitManager));
-        functions.add(new is_active_day(dataKitManager));
-        functions.add(new is_day_of_week(dataKitManager));
-        functions.add(new is_driving(dataKitManager));
-        functions.add(new is_privacy_on(dataKitManager));
+        functions.add(new get_study_week());
+        functions.add(new is_active());
+        functions.add(new is_active_day());
+        functions.add(new is_day_of_week());
+        functions.add(new is_driving());
+        functions.add(new is_privacy_on());
 
-        functions.add(new now(dataKitManager));
-        functions.add(new time_offset(dataKitManager));
-        functions.add(new today(dataKitManager));
+        functions.add(new now());
+        functions.add(new time_offset());
+        functions.add(new today());
 
-        functions.add(new random(dataKitManager));
+        functions.add(new random());
 
     }
 
@@ -94,30 +99,38 @@ public class ConditionManager {
     public boolean isTrue(String str){
         return isTrue(str, new ArrayList<>());
     }
-    public boolean isTrue(String str, ArrayList<String> debug){
-        BigDecimal res = evaluate(str, debug);
+    public boolean isTrue(String str, ArrayList<String> details){
+        BigDecimal res = evaluate(str, details);
         return res.doubleValue() != 0;
     }
     public BigDecimal evaluate(String str){
         return evaluate(str, new ArrayList<>());
     }
 
-    public BigDecimal evaluate(String str, ArrayList<String> debug) {
+    public BigDecimal evaluate(String str, ArrayList<String> details) {
+
         if(str==null || str.length()==0 || str.equalsIgnoreCase("true")) {
-            debug.add(str+"=1");
+            details.add("condition");
+            if(str==null) details.add("null");
+            else details.add(str);
+            details.add("1");
             return new BigDecimal(1);
         }
         if(str.equalsIgnoreCase("false")) {
-            debug.add(str+"=0");
+            details.add("condition");
+            details.add(str);
+            details.add("0");
             return new BigDecimal(0);
         }
         String strNew = prepare(str);
         Expression ex = new Expression(strNew);
         ex = ex.setPrecision(0);
         for (int i = 0; i < functions.size(); i++)
-            ex = functions.get(i).add(ex, debug);
+            ex = functions.get(i).add(ex, details);
         BigDecimal res=ex.eval();
-        debug.add(str+" = "+String.format(Locale.getDefault(),"%.2f",res.doubleValue()));
+        details.add("condition");
+        details.add(str);
+        details.add(String.format(Locale.getDefault(),"%.2f",res.doubleValue()));
 
         return res;
     }

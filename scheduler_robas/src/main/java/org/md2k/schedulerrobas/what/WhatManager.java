@@ -31,7 +31,6 @@ import android.util.Log;
 
 import com.orhanobut.logger.Logger;
 
-import org.md2k.schedulerrobas.State;
 import org.md2k.schedulerrobas.condition.ConditionManager;
 import org.md2k.schedulerrobas.configuration.Configuration;
 import org.md2k.schedulerrobas.configuration2object.Config2Operation;
@@ -42,19 +41,12 @@ import org.md2k.schedulerrobas.logger.MyLogger;
 import org.md2k.schedulerrobas.operation.AbstractOperation;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import rx.Observable;
-import rx.functions.Func1;
 
 public class WhatManager {
     private String type;
     private String id;
     private Context context;
-    private DataKitManager dataKitManager;
-    private ConditionManager conditionManager;
     private Configuration configuration;
     private Configuration.CWhat[][] cWhats;
     private MyLogger logger;
@@ -62,35 +54,33 @@ public class WhatManager {
     private ArrayList<AbstractOperation> application;
     private String command;
 
-    public WhatManager(String type, String id, Context context, Configuration configuration, Configuration.CWhat[][] cWhats, DataKitManager dataKitManager, ConditionManager conditionManager, MyLogger logger) {
+    public WhatManager(String type, String id, Context context, Configuration configuration, Configuration.CWhat[][] cWhats, MyLogger logger) {
         this.type = type;
         this.id = id;
         this.context = context;
         this.configuration = configuration;
         this.cWhats = cWhats;
-        this.dataKitManager = dataKitManager;
-        this.conditionManager = conditionManager;
         this.logger = logger;
     }
     public void start(){
         if (cWhats.length == 0) {
             logger.write(type + "/" + id + "/what", "nothing to trigger, failed");
-            Logger.d("WhatManager: "+type + "/" + id + "/what"+ "nothing to trigger, failed");
-            Log.e("abc", "what-> nothing to trigger");
+            DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/what("+type+" "+id+")","failed: nothing to trigger");
             return;
         }
         Configuration.CWhat cWhat = getWhat(cWhats);
         if (cWhat == null){
             logger.write(type + "/" + id + "/what", "condition=false, trigger failed");
-            Logger.d("WhatManager: "+type + "/" + id + "/what"+ "condition=false, trigger failed");
+            DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/what("+type+" "+id+")/condition","false: trigger failed");
             return;
         }
-        Logger.d("WhatManager: "+type + "/" + id + "/what"+ " condition=[" + cWhat.getCondition() + "]=true");
+        DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/what("+type+" "+id+")/condition","true: condition=["+cWhat.getCondition()+"]");
         logger.write(type + "/" + id + "/what", "condition=[" + cWhat.getCondition() + "]=true");
-        Logger.d("WhatManager: "+type + "/" + id + "/what/state[" + cWhat.getAction().getTransition()[0][0] + "]"+ " delivered");
+        DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/what("+type+" "+id+")/state","delivered: ["+cWhat.getAction().getTransition()[0][0]+"]");
+
         logger.write(type + "/" + id + "/what/state[" + cWhat.getAction().getTransition()[0][0] + "]", "delivered");
 
-        dataKitManager.insert(type,id,"DELIVERED");
+        DataKitManager.getInstance().insert(type,id,"DELIVERED");
         prepare(cWhat.getAction().getTransition()[0]);
         for(int i = 0;i<notification.size();i++)
             notification.get(i).start();
@@ -99,12 +89,12 @@ public class WhatManager {
     private Callback cNotification = new Callback() {
         @Override
         public void onReceive(String res) {
-            Logger.d("Notification result = "+res);
+            DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/what("+type+" "+id+")/notification",res);
             logger.write(type+"/"+id+"/notification",res);
             for(int i = 0;i<notification.size();i++)
                 notification.get(i).stop();
             if(res.toUpperCase().equals(command.toUpperCase())){
-                Logger.d("WhatManager: "+type + "/" + id + "/what/state[ema]"+ " delivered");
+                DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/what("+type+" "+id+")/state(EMA)","delivered");
                 logger.write(type + "/" + id + "/what/state[ema]", "delivered");
                 application.get(0).start();
             }
@@ -113,15 +103,15 @@ public class WhatManager {
     Callback cApp = new Callback() {
         @Override
         public void onReceive(String time) {
-            Logger.d("WhatManager: "+type + "/" + id + "/what/state[ema]"+ " response = "+time);
+            DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/what("+type+" "+id+")/state[EMA]","response="+time);
             logger.write(type + "/" + id + "/what/state[ema]", "response="+time);
             application.get(0).stop();
         }
     };
     private void prepare(String[] transition){
         try {
-            notification = Config2Operation.getOperation(context,type,id, logger,dataKitManager, configuration, conditionManager, transition[0], cNotification);
-            application = Config2Operation.getOperation(context,type,id, logger,dataKitManager, configuration, conditionManager, transition[2], cApp);
+            notification = Config2Operation.getOperation(type,id, logger, configuration, transition[0], cNotification);
+            application = Config2Operation.getOperation(type,id, logger, configuration, transition[2], cApp);
             command = transition[1];
         } catch (ConfigurationFileFormatError configurationFileFormatError) {
             configurationFileFormatError.printStackTrace();
@@ -132,11 +122,11 @@ public class WhatManager {
         int r = new Random().nextInt(cWhats.length);
         if(cWhats.length>1) {
             logger.write(type + "/" + id + "/what", "random selection=" + String.valueOf(r));
-            Logger.d("WhatManager: "+type + "/" + id + "/what"+ " random selection="+String.valueOf(r));
+            DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/what("+type+" "+id+")/condition","random selection ["+String.valueOf(r)+"]");
         }
         for (int i = 0; i < cWhats[r].length; i++)
-            if (conditionManager.isTrue(cWhats[r][i].getCondition())) {
-                Logger.d("WhatManager: "+type + "/" + id + "/what"+ " condition=[" + cWhats[r][i].getCondition() + "]=true, what [" + r + "," + i + "]");
+            if (ConditionManager.getInstance().isTrue(cWhats[r][i].getCondition())) {
+                DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/what("+type+" "+id+")/condition","true for ["+String.valueOf(r)+" "+String.valueOf(i)+"]");
                 logger.write(type + "/" + id + "/what", "condition=[" + cWhats[r][i].getCondition() + "]=true, what [" + r + "," + i + "]");
                 return cWhats[r][i];
             }

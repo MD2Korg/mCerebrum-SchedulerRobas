@@ -40,31 +40,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class is_active_day extends Function {
-    public is_active_day(DataKitManager dataKitManager) {
-        super("is_active_day",dataKitManager);
+    public is_active_day() {
+        super("is_active_day");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, 0) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
-                String s = name+"()=";
+                details.add(name);
+                details.add(name+"()");
+
                 long dayStart=getDay("START");
                 long dayEnd = getDay("END");
                 long now = DateTime.getDateTime();
                 long today = Time.getToday();
                 if(dayStart==-1 || now<dayStart || dayStart<today) {
-                    s+="0 [day is not started]";
-                    d.add(s);
+                    details.add("false [day is not started]");
                     return create(0);
                 }
                 if(dayStart<dayEnd) {
-                    s+="0 [day is ended]";
-                    d.add(s);
+                    details.add("false [day is ended]");
                     return create(0);
                 }
-                s+="1 [daystart="+DateTime.convertTimeStampToDateTime(dayStart)+", now="+DateTime.convertTimeStampToDateTime(now)+", dayend="+DateTime.convertTimeStampToDateTime(dayEnd);
-                d.add(s);
+                details.add("true [daystart="+DateTime.convertTimeStampToDateTime(dayStart)+", now="+DateTime.convertTimeStampToDateTime(now));
                 return create(1);
             }
         });
@@ -72,9 +71,9 @@ public class is_active_day extends Function {
     }
     private long getDay(String id){
         DataSourceBuilder d = new DataSourceBuilder().setType("DAY").setId(id);
-        ArrayList<DataSourceClient> dsc = dataKitManager.find(d.build());
+        ArrayList<DataSourceClient> dsc = DataKitManager.getInstance().find(d.build());
         if(dsc.size()==0) return -1;
-        ArrayList<DataType> dt = dataKitManager.query(dsc.get(0), 1);
+        ArrayList<DataType> dt = DataKitManager.getInstance().query(dsc.get(0), 1);
         if(dt.size()==0) return -1;
         return ((DataTypeLong) dt.get(0)).getSample();
     }

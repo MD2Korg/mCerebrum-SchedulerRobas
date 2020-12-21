@@ -48,11 +48,11 @@ class Config2Notification {
     private static final String TYPE_NOTIFICATION_PHONE_DIALOG = "PHONE_DIALOG";
 
 
-    public static ArrayList<AbstractOperation> getObject(Context context, String _type, String _id, MyLogger logger, DataKitManager dataKitManager, Configuration.CNotificationList[] notification_list, Configuration.CNotificationDetails[] notification_details, ConditionManager conditionManager, String id, Callback callback) {
+    public static ArrayList<AbstractOperation> getObject(String _type, String _id, MyLogger logger, Configuration.CNotificationList[] notification_list, Configuration.CNotificationDetails[] notification_details, String id, Callback callback) {
         ArrayList<AbstractOperation> observables = new ArrayList<>();
         Configuration.CNotification[] cNotificationList = get(notification_list, id);
         if (cNotificationList == null) return null;
-        String[] cNotificationDetailsIds = get(cNotificationList, conditionManager);
+        String[] cNotificationDetailsIds = get(cNotificationList);
         if (cNotificationDetailsIds == null) return null;
         for (String cNotificationDetailsId : cNotificationDetailsIds) {
             AbstractOperation o = get(_type+"/"+id, logger, notification_details, cNotificationDetailsId, callback);
@@ -128,9 +128,9 @@ class Config2Notification {
         return null;
     }
 
-    private static String[] get(Configuration.CNotification[] cNotifications, ConditionManager conditionManager) {
+    private static String[] get(Configuration.CNotification[] cNotifications) {
         for (Configuration.CNotification cNotification : cNotifications) {
-            if(conditionManager.isTrue(cNotification.getCondition()))
+            if(ConditionManager.getInstance().isTrue(cNotification.getCondition()))
                 return cNotification.getNotification_details_id();
         }
         return null;

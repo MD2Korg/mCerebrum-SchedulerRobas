@@ -47,13 +47,11 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 public class MyLogger {
-    private DataKitManager dataKitManager;
     private DataSourceClient dataSourceClient=null;
     private SharedPreferences sharedPreferences;
     Context context;
 
-    public MyLogger(Context context, DataKitManager dataKitManager) {
-        this.dataKitManager = dataKitManager;
+    public MyLogger(Context context) {
         this.context = context;
         sharedPreferences = context.getSharedPreferences(Constants.SHARED_PREFERENCE, Context.MODE_PRIVATE);
     }
@@ -79,12 +77,12 @@ public class MyLogger {
         try {
             if(dataSourceClient==null){
                 DataSourceBuilder dataSourceBuilder = new DataSourceBuilder().setType(DataSourceType.LOG);
-                dataSourceClient = dataKitManager.register(dataSourceBuilder.build());
+                dataSourceClient = DataKitManager.getInstance().register(dataSourceBuilder.build());
             }
 
             String[] s = new String[]{timeStr, id, message};
             DataTypeStringArray dataTypeStringArray = new DataTypeStringArray(DateTime.getDateTime(), s);
-            dataKitManager.insert(dataSourceClient, dataTypeStringArray);
+            DataKitManager.getInstance().insert(dataSourceClient, dataTypeStringArray);
         } catch (DataKitAccessError dataKitAccessError) {
             dataKitAccessError.printStackTrace();
         }

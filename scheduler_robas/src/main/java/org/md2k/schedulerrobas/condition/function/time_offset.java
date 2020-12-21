@@ -28,8 +28,6 @@ package org.md2k.schedulerrobas.condition.function;
 
 import com.udojava.evalex.Expression;
 
-import org.md2k.schedulerrobas.datakit.DataKitManager;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,11 +35,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class time_offset extends Function {
-    public time_offset(DataKitManager dataKitManager) {
-        super("time_offset",dataKitManager);
+    public time_offset() {
+        super("time_offset");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, 1) {
             @Override
             public Expression.LazyNumber lazyEval(final List<Expression.LazyNumber> lazyParams) {

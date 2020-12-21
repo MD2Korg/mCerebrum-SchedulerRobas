@@ -38,40 +38,39 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class get_last_sample_time extends Function {
-    public get_last_sample_time(DataKitManager dataKitManager) {
-        super("get_last_sample_time",dataKitManager);
+    public get_last_sample_time() {
+        super("get_last_sample_time");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, -1) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
+                details.add(name);
                 String s=name+"(";
                 for(int i=0;i<lazyParams.size();i++) {
                     if(i!=0) s+=",";
                     s += lazyParams.get(i).getString();
                 }
-                s+=")=";
+                details.add(s+")");
                 DataSourceBuilder db = createDataSource(lazyParams,0);
-                ArrayList<DataSourceClient> dd = dataKitManager.find(db.build());
+                ArrayList<DataSourceClient> dd = DataKitManager.getInstance().find(db.build());
                 if(dd.size()==0){
-                    s+=String.valueOf(-1)+" [datasource not found]";
-                    d.add(s);return create(-1);
+                    details.add(String.valueOf(-1)+" [datasource not found]");
+
+                    return create(-1);
                 }else {
                     long time = -1;
                     for (int i = 0; i < dd.size(); i++) {
-                        ArrayList<DataType> dataTypes = dataKitManager.query(dd.get(i), 1);
+                        ArrayList<DataType> dataTypes = DataKitManager.getInstance().query(dd.get(i), 1);
                         if (dataTypes.size() == 0) continue;
                         if (time < dataTypes.get(0).getDateTime())
                             time = dataTypes.get(0).getDateTime();
                     }
                     if(time==-1){
-                        s+=String.valueOf(-1)+" [data not found]";
-                        d.add(s);
-
+                        details.add(String.valueOf(-1)+" [data not found]");
                     }else {
-                        s+=String.valueOf(time)+" [time="+DateTime.convertTimeStampToDateTime(time)+"]";
-                        d.add(s);
+                        details.add(String.valueOf(time)+" [time="+DateTime.convertTimeStampToDateTime(time)+"]");
                     }
                     return create(time);
                 }

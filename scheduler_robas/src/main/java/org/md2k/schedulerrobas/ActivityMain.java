@@ -1,16 +1,19 @@
 package org.md2k.schedulerrobas;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.provider.Settings;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import org.md2k.datakitapi.time.DateTime;
 import org.md2k.mcerebrum.commons.permission.PermissionInfo;
@@ -35,6 +38,17 @@ public class ActivityMain extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "!PERMISSION DENIED !!! Could not continue...", Toast.LENGTH_SHORT).show();
                 finish();
             } else {
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Intent intent = new Intent();
+                    String packageName = getPackageName();
+                    PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                    if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                        intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                        intent.setData(Uri.parse("package:" + packageName));
+                        startActivity(intent);
+                    }
+                }
+
                 load();
             }
         });

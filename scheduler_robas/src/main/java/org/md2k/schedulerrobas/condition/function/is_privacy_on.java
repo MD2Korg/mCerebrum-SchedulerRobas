@@ -42,15 +42,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class is_privacy_on extends Function {
-    public is_privacy_on(DataKitManager dataKitManager) {
-        super("is_privacy_on", dataKitManager);
+    public is_privacy_on() {
+        super("is_privacy_on");
     }
 
-    public Expression add(Expression e, ArrayList<String> d) {
+    public Expression add(Expression e, ArrayList<String> details) {
         e.addLazyFunction(e.new LazyFunction(name, 0) {
             @Override
             public Expression.LazyNumber lazyEval(List<Expression.LazyNumber> lazyParams) {
-                boolean b = isValid(d);
+                boolean b = isValid(details);
                 if (b) return create(1);
                 else return create(0);
             }
@@ -58,36 +58,39 @@ public class is_privacy_on extends Function {
         return e;
     }
 
-    private boolean isValid(ArrayList<String> d) {
+    private boolean isValid(ArrayList<String> details) {
         DataSourceBuilder dataSourceBuilder = new DataSourceBuilder().setType(DataSourceType.PRIVACY);
-        ArrayList<DataSourceClient> dataSourceClientArrayList = dataKitManager.find(dataSourceBuilder.build());
+        ArrayList<DataSourceClient> dataSourceClientArrayList = DataKitManager.getInstance().find(dataSourceBuilder.build());
+        details.add(name);
+        details.add(name+"()");
+
         if (dataSourceClientArrayList.size() == 0) {
-            d.add(name + "()=0 [datasource not found]");
+            details.add("0 [datasource not found]");
             return false;
         }
-        ArrayList<DataType> dataTypes = dataKitManager.query(dataSourceClientArrayList.get(0), 1);
+        ArrayList<DataType> dataTypes = DataKitManager.getInstance().query(dataSourceClientArrayList.get(0), 1);
         if (dataTypes.size() == 0) {
-            d.add(name + "()=0 [data not found]");
+            details.add("0 [data not found]");
             return false;
         }
         DataTypeJSONObject dataTypeJSONObject = (DataTypeJSONObject) dataTypes.get(0);
         Gson gson = new Gson();
         PrivacyData privacyData = gson.fromJson(dataTypeJSONObject.getSample().toString(), PrivacyData.class);
         if (privacyData.isStatus() == false) {
-            d.add(name + "()=0 [privacy status=false]");
+            details.add("0 [privacy status=false]");
             return false;
         }
         if (privacyData.getDuration().getValue() + privacyData.getStartTimeStamp() <= DateTime.getDateTime()) {
-            d.add(name + "()=0 [privacy_time < current_time]");
+            details.add("0 [privacy_time < current_time]");
             return false;
         }
         for (int i = 0; i < privacyData.getPrivacyTypes().size(); i++) {
             if (privacyData.getPrivacyTypes().get(i).getId().equals("ema_intervention")) {
-                d.add(name + "()=1 [ema privacy enabled]");
+                details.add("1 [ema privacy enabled]");
                 return true;
             }
         }
-        d.add(name + "()=0 [privacy is not enabled]");
+        details.add("0 [privacy is not enabled]");
         return false;
     }
 

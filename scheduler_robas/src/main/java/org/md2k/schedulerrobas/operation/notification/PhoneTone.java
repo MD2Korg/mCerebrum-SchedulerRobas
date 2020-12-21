@@ -29,6 +29,7 @@ package org.md2k.schedulerrobas.operation.notification;
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.SoundPool;
 import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
@@ -37,6 +38,8 @@ import com.orhanobut.logger.Logger;
 
 import org.md2k.datakitapi.time.DateTime;
 import org.md2k.schedulerrobas.MyApplication;
+import org.md2k.schedulerrobas.R;
+import org.md2k.schedulerrobas.datakit.DataKitManager;
 import org.md2k.schedulerrobas.logger.MyLogger;
 import org.md2k.schedulerrobas.operation.AbstractOperation;
 import org.md2k.schedulerrobas.time.Time;
@@ -48,7 +51,7 @@ public class PhoneTone extends AbstractOperation {
     private long repeat;
     private long interval;
     private Long[] at;
-    private MediaPlayer mPlayer;
+//    private MediaPlayer mPlayer;
     private String path;
     private MyLogger logger;
     private String base;
@@ -56,7 +59,9 @@ public class PhoneTone extends AbstractOperation {
     private Handler hAt;
     private Handler hInterval;
     private long repeatNow;
-    private AssetFileDescriptor descriptor;
+//    private AssetFileDescriptor descriptor;
+    private SoundPool soundPool;
+    private int soundID;
 
     public PhoneTone(String path, MyLogger myLogger, String format, long repeat, long interval, Long[] at, String base) {
         this.format = format;
@@ -66,36 +71,55 @@ public class PhoneTone extends AbstractOperation {
         this.path = path;
         this.logger = myLogger;
         this.base = base;
-        mPlayer = new MediaPlayer();
+//        mPlayer = new MediaPlayer();
         hAt = new Handler();
         hInterval = new Handler();
     }
 
     @Override
     public void start() {
+        soundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
+        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                int validIndex = -1;
+                repeatNow = 0;
+//        load(format);
+                long curTime = DateTime.getDateTime();
+                for (int i = 0; i < at.length; i++) {
+                    long trigTime = at[i] + Time.getToday() + Time.getTime(base);
+                    if (trigTime > curTime) {
+                        validIndex = i;
+                        break;
+                    }
+                }
+                if (validIndex >= at.length) return;
+                if(validIndex==-1) return;
+                if (validIndex != 0) hAt.postDelayed(rAt, 1000);
+                for (int i = validIndex; i < at.length; i++) {
+                    long trigTime = at[i] + Time.getToday() + Time.getTime(base);
+                    hAt.postDelayed(rAt, trigTime - DateTime.getDateTime());
+                }
+
+            }
+        });
+        try {
+            soundID = soundPool.load(MyApplication.getContext().getAssets().openFd("tone.mp3"), 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+//        SoundPool sp = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
+//        int soundId = sp.load(MyApplication.getContext(),R.raw.windows_8_notify, 1); // in 2nd param u have to pass your desire ringtone
+
+/*
         try {
             descriptor = MyApplication.getContext().getAssets().openFd("tone.mp3");
         } catch (IOException e) {
 
         }
-        int validIndex = -1;
-        repeatNow = 0;
-//        load(format);
-        long curTime = DateTime.getDateTime();
-        for (int i = 0; i < at.length; i++) {
-            long trigTime = at[i] + Time.getToday() + Time.getTime(base);
-            if (trigTime > curTime) {
-                validIndex = i;
-                break;
-            }
-        }
-        if (validIndex >= at.length) return;
-        if(validIndex==-1) return;
-        if (validIndex != 0) hAt.postDelayed(rAt, 1000);
-        for (int i = validIndex; i < at.length; i++) {
-            long trigTime = at[i] + Time.getToday() + Time.getTime(base);
-            hAt.postDelayed(rAt, trigTime - DateTime.getDateTime());
-        }
+*/
 
 /*
         long next = getNextAt();
@@ -107,21 +131,26 @@ public class PhoneTone extends AbstractOperation {
 
     @Override
     public void stop() {
+/*
         try{
             descriptor.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
+*/
         try {
             hAt.removeCallbacks(rAt);
             hInterval.removeCallbacks(rInterval);
         }catch (Exception e){}
         try {
+            soundPool.stop(soundID);
+/*
             if (mPlayer != null) {
                 mPlayer.stop();
                 mPlayer.reset();
                 mPlayer.release();
             }
+*/
         } catch (Exception ignored) {
 //            Logger.e("PhoneTone..stop()...failed" + "exception=" + ignored.getMessage());
             Log.e("abc", "PhoneTone..stop()...failed" + "exception=" + ignored.getMessage());
@@ -186,8 +215,11 @@ public class PhoneTone extends AbstractOperation {
             }
         }
     */
+
     private void play() {
         try {
+            soundPool.play(soundID, 1, 1, 1, 0, 1f);
+/*
             if (mPlayer != null && mPlayer.isPlaying()) {
                 mPlayer.stop();
                 mPlayer.release();
@@ -199,8 +231,9 @@ public class PhoneTone extends AbstractOperation {
             mPlayer.prepare();
 //            mPlayer.setVolume(1f, 1f);
             mPlayer.start();
+*/
             logger.write(path + "/tone", "play");
-            Logger.d(path + "/tone", "play");
+            DataKitManager.getInstance().insertSystemLog("DEBUG", "Service/notification/tone","play");
             Log.d("abc", "phonetone play...");
 
         } catch (Exception e) {
@@ -209,19 +242,4 @@ public class PhoneTone extends AbstractOperation {
         }
     }
 
-/*
-    private void play() {
-        try {
-            if(mPlayer.isPlaying()) mPlayer.stop();
-            mPlayer.prepare();
-            logger.write(path + "/tone", "play");
-            Logger.d(path + "/tone", "play");
-            Log.d("abc", "phonetone play...");
-            mPlayer.start();
-        } catch (Exception e) {
-            Logger.e("PhoneTone..play()..start()..failed e="+e.toString());
-            Log.e("abc", "PhoneTone..play()..start()..failed");
-        }
-    }
-*/
 }
